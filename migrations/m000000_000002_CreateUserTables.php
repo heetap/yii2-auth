@@ -20,9 +20,9 @@ class m000000_000002_CreateUserTables extends \yii\db\Migration
 					 'auth_key' => Schema::TYPE_STRING . '(128)',
 					 'status' => Schema::TYPE_INTEGER . ' NOT NULL DEFAULT ' . \auth\models\User::STATUS_ACTIVE,
 					 'last_visit_time' => Schema::TYPE_TIMESTAMP,
-					 'create_time' => Schema::TYPE_TIMESTAMP . ' NOT NULL',
-					 'update_time' => Schema::TYPE_TIMESTAMP,
-					 'delete_time' => Schema::TYPE_TIMESTAMP,
+					 'create_time' => Schema::TYPE_TIMESTAMP . ' NOT NULL DEFAULT CURRENT_TIMESTAMP',
+					 'update_time' => Schema::TYPE_TIMESTAMP . ' DEFAULT CURRENT_TIMESTAMP',
+					 'delete_time' => Schema::TYPE_TIMESTAMP . ' DEFAULT CURRENT_TIMESTAMP',
 				 )
 		);
 		$this->createIndex('User_status_ix', $tableMap['User'], 'status');
