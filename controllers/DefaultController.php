@@ -3,6 +3,7 @@
 namespace auth\controllers;
 
 use auth\models\PasswordResetRequestForm;
+use auth\components\AuthHandler;
 use auth\models\ResetPasswordForm;
 use auth\models\SignupForm;
 use Yii;
@@ -26,13 +27,17 @@ class DefaultController extends Controller
 		return [
 			'access' => [
 				'class' => \yii\filters\AccessControl::className(),
-				'only' => ['logout', 'signup'],
+				'only' => ['logout', 'signup', 'auth'],
 				'rules' => [
 					[
 						'actions' => ['signup'],
 						'allow' => true,
 						'roles' => ['?'],
-					],
+					],[
+                        'actions' => ['auth'],
+                        'allow' => true,
+                        'roles' => ['?'],
+                    ],
 					[
 						'actions' => ['logout'],
 						'allow' => true,
@@ -52,9 +57,17 @@ class DefaultController extends Controller
 			'captcha' => [
 				'class' => 'yii\captcha\CaptchaAction',
 				'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
-			],
+			],'auth' => [
+                'class' => 'yii\authclient\AuthAction',
+                'successCallback' => [$this, 'onAuthSuccess'],
+            ],
 		];
 	}
+
+    public function onAuthSuccess($client)
+    {
+        (new AuthHandler($client))->handle();
+    }
 
 	public function actionLogin()
 	{
