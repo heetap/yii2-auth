@@ -18,9 +18,26 @@ class AuthHandler
      */
     private $client;
 
+    private $mails = [
+        '@pdffiller.com',
+        '@pdffiller.team'
+    ];
+
     public function __construct(ClientInterface $client)
     {
         $this->client = $client;
+    }
+
+    protected function isValidEmail($checkMail)
+    {
+        $result = false;
+        foreach ($this->mails as $email) {
+            if (strpos($checkMail, $email) !== false) {
+                $result = true;
+            }
+        }
+
+        return $result;
     }
 
     public function handle()
@@ -29,9 +46,11 @@ class AuthHandler
         $emails = ArrayHelper::getValue($attributes, 'emails');
         $id = ArrayHelper::getValue($attributes, 'id');
         $nickname = $email = (isset($emails[0]['value'])) ? $emails[0]['value'] : null;
-        if (strpos($email, '@pdffiller.com') === false) {
+
+        if (!$this->isValidEmail($email)) {
             return Yii::$app->getResponse()->redirect('/')->send();
         }
+
         /* @var Auth $auth */
         $auth = Auth::find()->where([
             'source' => $this->client->getId(),
