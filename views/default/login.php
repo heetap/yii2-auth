@@ -42,5 +42,11 @@ $this->params['breadcrumbs'][] = $this->title;
 	</div>
 
 	<?php ActiveForm::end(); ?>
+
+    <?= yii\authclient\widgets\AuthChoice::widget([
+        'baseAuthUrl' => [\yii\helpers\Url::to('auth')],
+        'popupMode'   => false,
+    ]) ?>
+
 	<p class="text-center"><?= Html::a(\Yii::t('auth.user', 'Forgot password?'), ['default/request-password-reset']) ?></p>
 </div>
