@@ -27,7 +27,7 @@ class UserSearch extends User
 
     public function search($params)
     {
-        $query = User::find();
+        $query = User::find()->joinWith(['assignment']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

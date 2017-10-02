@@ -28,6 +28,14 @@ use auth\models\User;
 		User::STATUS_DELETED => $model->getStatus(User::STATUS_DELETED),
 	]) ?>
 
+    <?= Html::dropDownList('role', null,[
+        User::ROLE_VIEWERS => User::ROLE_VIEWERS,
+        User::ROLE_MANAGER => User::ROLE_MANAGER,
+        User::ROLE_ADMIN   => User::ROLE_ADMIN,
+    ], [
+            'class' => 'form-control'
+    ]) ?>
+
 	<div class="form-group">
 			<?= Html::submitButton($model->isNewRecord ? Yii::t('auth.user', 'Create') : Yii::t('auth.user', 'Update'), ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
 		</div>

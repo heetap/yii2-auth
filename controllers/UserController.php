@@ -8,6 +8,7 @@ use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use Yii;
 
 /**
  * UserController implements the CRUD actions for User model.
@@ -28,9 +29,7 @@ class UserController extends Controller
 				'rules' => [
 					[
 						'allow' => true,
-						'matchCallback' => function () {
-								return \Yii::$app->user->getIsSuperAdmin();
-							},
+                        'roles' => ['admin'],
 					],
 				],
 			],
@@ -82,9 +81,15 @@ class UserController extends Controller
 	 */
 	public function actionCreate()
 	{
-		$model = new User;
-
+	    /** @var User $model */
+		$model = Yii::createObject(User::className());
 		if ($model->load($_POST) && $model->save()) {
+            if (isset($_POST['role']) && in_array($_POST['role'], User::getRoles())) {
+                $oldRole = Yii::$app->authManager->getRolesByUser($model->id);
+                if (!empty($oldRole)) {
+                    $model->changeRole(key($oldRole), $_POST['role']);
+                }
+            }
 			return $this->redirect(['view', 'id' => $model->id]);
 		} else {
 			return $this->render('create', [
@@ -110,6 +115,12 @@ class UserController extends Controller
         }
 
 		if ($model->load($_POST) && $model->save()) {
+            if (isset($_POST['role']) && in_array($_POST['role'], User::getRoles())) {
+                $oldRole = Yii::$app->authManager->getRolesByUser($model->id);
+                if (!empty($oldRole)) {
+                    $model->changeRole(key($oldRole), $_POST['role']);
+                }
+            }
 			return $this->redirect(['view', 'id' => $model->id]);
 		} else {
 			return $this->render('update', [
