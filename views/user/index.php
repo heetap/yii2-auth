@@ -39,6 +39,16 @@ $this->params['breadcrumbs'][] = $this->title;
 						return $model->getStatus();
 					}
 			],
+            [
+                'format'    => 'raw',
+                'attribute' => 'role',
+                'value'     => function($model) {
+	                if (empty($model->assignment)) {
+	                    return Html::tag('span', 'Not Set', ['class' => 'label label-warning']);
+                    }
+                    return Html::tag('span', $model->assignment->item_name, ['class' => 'label label-success']);
+                }
+            ],
 			'last_visit_time',
 			// 'create_time',
 			// 'update_time',

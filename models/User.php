@@ -33,6 +33,10 @@ class User extends ActiveRecord implements IdentityInterface
 	const STATUS_ACTIVE = 2;
 	const STATUS_SUSPENDED = 3;
 
+	const ROLE_ADMIN   = 'admin';
+	const ROLE_VIEWERS = 'viewers';
+	const ROLE_MANAGER = 'manager';
+
 	private $_isSuperAdmin = null;
 
 	private $statuses = [
@@ -41,6 +45,14 @@ class User extends ActiveRecord implements IdentityInterface
 		self::STATUS_ACTIVE => 'Active',
 		self::STATUS_SUSPENDED => 'Suspended',
 	];
+
+	public static function getRoles() {
+	    return [
+            self::ROLE_ADMIN,
+            self::ROLE_MANAGER,
+            self::ROLE_VIEWERS
+        ];
+    }
 
 	public function behaviors()
 	{
@@ -261,7 +273,65 @@ class User extends ActiveRecord implements IdentityInterface
 		return false;
 	}
 
-	public function beforeSave($insert)
+	public function afterSave($insert, $changedAttributes)
+    {
+        $roles = Yii::$app->authManager->getRolesByUser($this->id);
+        if (empty($roles)) {
+            $this->attachRole('viewers');
+        }
+        return parent::afterSave($insert, $changedAttributes);
+    }
+
+    public function attachRole($nameRole)
+    {
+        $check = Yii::$app->authManager->checkAccess($this->id, $nameRole);
+        if ($check) {
+            return true;
+        }
+        $role = Yii::$app->authManager->getRole($nameRole);
+        if (empty($role)) {
+            return false;
+        }
+        Yii::$app->authManager->assign($role, $this->id);
+        return true;
+    }
+
+    public function detachRole($nameRole)
+    {
+        $check = Yii::$app->authManager->checkAccess($this->id, $nameRole);
+        if (!$check) {
+            return true;
+        }
+        $role = Yii::$app->authManager->getRole($nameRole);
+        if (empty($role)) {
+            return false;
+        }
+        Yii::$app->authManager->revoke($role, $this->id);
+        return true;
+    }
+
+    public function changeRole($oldRole, $newRole)
+    {
+        if ($oldRole == $newRole) {
+            return true;
+        }
+
+        $checkOld = Yii::$app->authManager->checkAccess($this->id, $oldRole);
+        $checkNew = Yii::$app->authManager->checkAccess($this->id, $newRole);
+        if (!$checkOld && $checkNew) {
+            return true;
+        }
+        if (!$checkOld && !$checkNew) {
+            return false;
+        }
+
+        $this->detachRole($oldRole);
+        $this->attachRole($newRole);
+
+        return true;
+    }
+
+    public function beforeSave($insert)
 	{
 		if (parent::beforeSave($insert)) {
 			if ($this->isNewRecord) {
@@ -270,7 +340,6 @@ class User extends ActiveRecord implements IdentityInterface
 			if ($this->getScenario() !== \yii\web\User::EVENT_AFTER_LOGIN) {
 				$this->setAttribute('update_time', new Expression('CURRENT_TIMESTAMP'));
 			}
-
 			return true;
 		}
 		return false;
@@ -337,4 +406,9 @@ class User extends ActiveRecord implements IdentityInterface
 	{
 		$this->password_reset_token = null;
 	}
+
+	public function getAssignment()
+    {
+        return $this->hasOne(AuthAssignment::className(), ['user_id' => 'id']);
+    }
 }
